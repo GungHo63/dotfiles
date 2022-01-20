@@ -115,3 +115,7 @@ check_port(){
   (echo > /dev/tcp/$host/$port) >/dev/null 2>&1 \
     && echo "Yes connection." || echo "No connection."
 }
+
+#Added by jonju
+source <(kubectl completion bash)
+source <(oc completion bash)

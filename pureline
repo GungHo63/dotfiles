@@ -344,12 +344,54 @@ function kubernetes_module {
     local context ns
 
     context=$(kubectl config current-context)
-    ns=$( kubectl config view -o jsonpath="{.contexts[?(@.name == \"${context}\")].context.namespace}" )
+    ns=$( kubectl config view -o jsonpath='{.contexts[?(@.name == "${context}")].context.namespace}' )
 
     local content="${kubesymbol} ${context}:${ns}"
     PS1+=$(section_end $bg_color)
     PS1+=$(section_content $fg_color $bg_color " $content ")
     __last_color=$bg_color
+}
+
+# -----------------------------------------------------------------------------
+# append to prompt: default kubernetes context/namespace from $KUBECONFIG
+# arg: $1 foreground color
+# arg; $2 background color
+function openshift_module {
+    local bg_color=$1                  # Set the background color
+    local fg_color=$2                  # Set the foregropund color
+    local kubesymbol=$'\xE2\x8E\x88'
+
+    local who_ami=$(oc whoami 2> /dev/null)
+    if [ -n "$who_ami" ]; then
+      local temp=$(oc project)
+      local project=`echo "$temp" | cut -d'"' -f 2`
+      local node=`echo "$temp" | cut -d'"' -f 4`
+
+      if  [ "$node" = "https://api.pocp4.arbetsformedlingen.se:6443" ]; then
+        who_ami=${who_ami:3:5}
+        node="pocp4"
+      fi
+      if  [ "$node" = "https://api.tocp4.arbetsformedlingen.se:6443" ]; then
+        who_ami=${who_ami:3:5}
+        node="tocp4"
+      fi
+      if  [ "$node" = "https://tocpconsole.arbetsformedlingen.se:443" ]; then
+        node="tocp"
+      fi
+
+      if  [ "$node" = "https://ocpcluster-a.arbetsformedlingen.se:443" ]; then
+        node="pocp-a"
+      fi
+      if  [ "$node" = "https://pocpconsole.arbetsformedlingen.se:443" ]; then
+        node="pocp-b"
+      fi
+
+      local content="${kubesymbol} ${node}:${who_ami}:${project}"
+      newline_module
+      PS1+=$(section_end $bg_color)
+      PS1+=$(section_content $fg_color $bg_color " $content ")
+      __last_color=$bg_color
+    fi
 }
 
 # -----------------------------------------------------------------------------
